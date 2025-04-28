@@ -1,14 +1,14 @@
 import {startServer, stopServer} from "../index";
-import * as createServer from "../server/createServer"
-import express from "express"
+import request from "supertest";
 
 describe("Index file", () => {
-    test(`startServer function creates a server and listens to the result`, () => {
-        const createServerSpy = jest.spyOn(createServer, "createServer");
-        const serverListenSpy = jest.spyOn(express.application, "listen");
+    test(`startServer function creates a server and health check route is accessible`, async () => {
         const server = startServer()
-        expect(createServerSpy).toHaveBeenCalled();
-        expect(serverListenSpy).toHaveBeenCalled();
+        const response = await request(server).get("/health");
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({
+            message: "OK"
+        });
         stopServer(server);
     })
 })
