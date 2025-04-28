@@ -1,16 +1,26 @@
 import config from "config"
 import {createServer} from "./server/createServer";
+import { Server } from "node:http"
 
-export function main(){
+export function startServer(){
     const port = config.get<string>("port");
-    const server = createServer();
-    server.listen(port, (error) => {
+    const app = createServer();
+    return app.listen(port, (error) => {
         if(error){
             console.error(error);
             process.exit(1);
         }
         console.log("Server listening on port 3000");
+        process.on("exit", () => {
+            console.info("⛔️ Server Stopped");
+        });
     });
 }
 
-main();
+if (require.main === module) {
+    startServer();
+}
+
+export function stopServer(server: Server){
+    server.close();
+}
