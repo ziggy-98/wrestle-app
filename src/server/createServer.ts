@@ -1,4 +1,7 @@
 import express from "express";
+import {configureRouting} from "./routes";
 export function createServer(){
-    return express();
+    const server = express();
+    configureRouting(server);
+    return server;
 }
