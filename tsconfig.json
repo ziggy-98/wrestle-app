@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "dist",
+    "lib": ["es2023"],
+    "target": "es2022",
+    "skipLibCheck": true,
+    "module": "nodenext",
+    "allowJs": false,
+    "checkJs": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    /* strict type checking options */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    /* Additional Checks */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Module Resolution Options */
+    "moduleResolution": "nodenext",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* pretty compile output */
+    "pretty": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": ["node_modules", "**/*/*.test.ts"]
+}
