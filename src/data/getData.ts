@@ -23,6 +23,27 @@ type Match = {
     event: string
 }
 
+// type Promotion = {
+//     location: string,
+//     isActive: boolean,
+//     started: Date,
+//     finished?: Date,
+// }
+
+type Title = {
+    name: string,
+    url: string,
+    promotion: string,
+    isActive?: boolean,
+    activeFrom?: string,
+    activeTo?: string,
+    reigns: {
+        champion: string,
+        heldFrom?: Date,
+        heldTo?: Date
+    }[]
+}
+
 const BASE_URL = "https://www.cagematch.net/"
 
 export async function getData(){
@@ -32,24 +53,104 @@ export async function getData(){
     const wrestlers = await getWrestlers(browser);
     let wrestlersWithDetails = [];
     let allWrestlingMatches: Match[] = [];
+    let allTitles: Title[] = [];
     for(const wrestler of wrestlers){
         const wrestlerUrl = `${BASE_URL}${wrestler.url}`;
         const wrestlerInfo = await getWrestlerDetail(browser, wrestlerUrl);
-        if(wrestlerInfo?.roles?.find((role) => role.toLowerCase().indexOf("wrestler") > -1)){
-            wrestlersWithDetails.push({
-                ...wrestler,
-                wrestlerInfo
-            });
+        if(!wrestlerInfo?.roles?.find((role) => role.toLowerCase().indexOf("wrestler") > -1)){
+            continue;
         }
+        wrestlersWithDetails.push({
+            ...wrestler,
+            wrestlerInfo
+        });
         const matchUrl = wrestlerUrl+"&page=4";
         const newWrestlerMatches = await getWrestlerMatches(browser, matchUrl, allWrestlingMatches);
         allWrestlingMatches = allWrestlingMatches.concat(newWrestlerMatches);
+        const titleUrl = wrestlerUrl+"&page=11";
+        const newTitleReigns = await getWrestlerTitles(browser, titleUrl, wrestler.name);
+        allTitles = await mergeReigns(browser, allTitles, newTitleReigns);
     }
     await browser.close();
     return {
         wrestlers: wrestlersWithDetails,
-        matches: allWrestlingMatches
+        matches: allWrestlingMatches,
+        titles: allTitles
     }
+}
+
+export async function mergeReigns(browser: Browser, allTitles: Title[], newReigns: WrestlerTitlesReturnType): Promise<Title[]>{
+    let titlesToReturn = allTitles.slice(0);
+    for(const [currentTitleName, currentTitleInfo] of Object.entries(newReigns)){
+        let existingTitleIndex = titlesToReturn.findIndex(title => title.name === currentTitleName);
+        if(existingTitleIndex === -1){
+            const enrichedTitle = await getTitleDetail(browser, currentTitleInfo);
+            if(!enrichedTitle){
+                continue;
+            }
+            titlesToReturn.push(enrichedTitle);
+            existingTitleIndex = titlesToReturn.length - 1;
+        }
+        let existingTitle = titlesToReturn[existingTitleIndex];
+        existingTitle.reigns = existingTitle.reigns.concat(currentTitleInfo.reigns ?? []);
+    }
+    return titlesToReturn;
+}
+
+export async function getTitleDetail(browser: Browser, titleInfo: Partial<Title>): Promise<Title | undefined>{
+    const page = await browser.newPage();
+    const { url, name, reigns } = titleInfo;
+    if(!url){
+        console.warn(`No url found for title ${name}, skipping`);
+        return;
+    }
+    await page.goto(url);
+    const allPromotionsEl = await page.$(".InformationBoxTable .InformationBoxRow .InformationBoxTitle::-p-text(Promotions) + .InformationBoxContents");
+    if(!allPromotionsEl){
+        console.warn(`No promotions found for title ${name}, skipping`);
+        return;
+    }
+    const { promotion, activeFrom, activeTo } = await allPromotionsEl.evaluate((el) => {
+        const text = el.textContent
+        const promotionEl = el.firstElementChild;
+        let promotion = "";
+        if(promotionEl){
+            promotion = promotionEl.textContent.trim();
+        }
+        if(!promotion){
+            promotion = text.split("(")[0].trim();
+        }
+        const allDates = text?.matchAll(/\([a-zA-Z0-9\- .]+\)/g);
+        let activeFrom = "";
+        let activeTo = "";
+        for(const dateString in allDates){
+            const [startDate, endDate] = dateString.substring(1,dateString.length - 2).split("-");
+            const startDateSplit = startDate.split(".");
+            activeFrom = startDateSplit.at(startDateSplit.length -1)?.trim() ?? "";
+            if(activeTo !== ""){
+                const endDateSplit = endDate.split(".");
+                activeTo = endDateSplit.at(endDateSplit.length -1)?.trim() ?? "";
+            }
+        }
+        return {
+            promotion,
+            activeFrom,
+            activeTo: activeTo !== "today" ? activeTo : undefined
+        }
+    });
+    const isActive = activeTo === undefined;
+    const titleToReturn: Partial<Title> = {
+        name,
+        url,
+        reigns,
+        promotion,
+        isActive,
+        activeFrom
+    }
+    if(activeTo){
+        titleToReturn.activeTo = activeTo;
+    }
+    return titleToReturn as Title;
 }
 
 export async function getWrestlers(browser: Browser){
@@ -179,6 +280,7 @@ async function getWrestlerDetail(browser: Browser, url: string): Promise<Wrestle
             return el.textContent;
         })
     }
+    await page.close();
     return detail;
 }
 
@@ -186,10 +288,74 @@ async function getWrestlerDetail(browser: Browser, url: string): Promise<Wrestle
 //
 // }
 //
-// async function getWrestlerTitles(browser: Browser, url: string){
-//
-// }
-//
+type WrestlerTitlesReturnType = Record<string, Partial<Title>>;
+async function getWrestlerTitles(browser: Browser, url: string, wrestlerName: string): Promise<WrestlerTitlesReturnType>{
+    const page = await browser.newPage();
+    await page.goto(url);
+    let titles: WrestlerTitlesReturnType= {};
+    const reignTableEl = await page.$(".Table");
+    if(!reignTableEl){
+        console.warn(`No reign table found for wrestler ${wrestlerName}, skipping`);
+        return titles;
+    }
+    const rows = await reignTableEl.$$(".TRow1,.TRow2");
+    if(!rows){
+        console.warn(`No rows found in reigns table for wrestler ${wrestlerName}, skipping`);
+        return titles;
+    }
+    for(const row of rows){
+        const timeframeEl = await row.$(".TCol:nth-child(1)");
+        const titleNameEl = await row.$(".TCol:nth-child(2)");
+        if(!titleNameEl){
+            continue;
+        }
+        const {name, url} = await titleNameEl.evaluate((el) => {
+            const name = el.textContent?.split("(")[0].trim();
+            const cellAttributes = el.firstElementChild.attributes;
+            let url = "";
+            for(const attribute of cellAttributes){
+                if(attribute.name === "href"){
+                    url = attribute.value;
+                }
+            }
+            return {
+                name,
+                url
+            }
+        });
+        if(!timeframeEl){
+            console.warn(`Could not find time frame for title reign with title ${name} for wrestler ${wrestlerName}`);
+            continue;
+        }
+        const timeframe = await timeframeEl.evaluate((el) => {
+            const timeframeString = el.textContent;
+            return timeframeString?.replaceAll("&nbsp", "").split("-");
+        });
+        const [heldFrom, heldTo] = timeframe.map((date: string) => {
+                const [day, month, year] = date.split(".").map((datePart) => datePart.trim());
+                const dateToReturn = new Date(`${year}-${month}-${day}`);
+                if(isNaN(dateToReturn.getTime())){
+                    return;
+                }
+                return dateToReturn;
+        });
+        if(!titles[name]){
+            titles[name] = {
+                name,
+                url: `${BASE_URL}${url}`,
+                reigns: []
+            }
+        }
+        const newReign = {
+            champion: wrestlerName,
+            heldFrom,
+            heldTo
+        }
+        titles[name].reigns?.push(newReign);
+    }
+    return titles;
+}
+
 async function getWrestlerMatches(browser: Browser, url: string, allMatches: Match[]): Promise<Match[]>{
     let newMatches: Match[] = [];
     const startPage = await browser.newPage();
@@ -253,6 +419,7 @@ async function getWrestlerMatches(browser: Browser, url: string, allMatches: Mat
                 newMatches.push(matchData);
             }
         }
+        await page.close();
     }
     return newMatches;
 }
@@ -263,9 +430,10 @@ async function getWrestlerMatches(browser: Browser, url: string, allMatches: Mat
         // wrestlers.forEach(wrestler => {
         //     console.log(wrestler);
         // })
-        const { wrestlers, matches } = data;
+        const { wrestlers, matches, titles } = data;
         console.log("Final wrestler count: ", wrestlers.length);
         console.log("Final match count: ", matches.length);
+        console.log("Final titles count: ", titles.length);
         console.log("All data extracted successfully");
         return;
     })
