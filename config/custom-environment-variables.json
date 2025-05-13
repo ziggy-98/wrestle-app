@@ -1,3 +1,6 @@
 {
-  "port": "PORT"
+  "port": "PORT",
+  "data": {
+    "baseUrl": "DATA_BASE_URL"
+  }
 }
