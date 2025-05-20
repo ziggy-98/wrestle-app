@@ -3,3 +3,5 @@ node_modules
 coverage
 dist
 src/data/extracts
+generated/prisma
+.env
