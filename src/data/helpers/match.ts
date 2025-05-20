@@ -37,6 +37,10 @@ export async function getAllForWrestler(browser: Browser, url: string, allMatche
             if(isNaN(matchDate.getTime())){
                 console.warn(`Invalid date: ${matchDateString}`);
             }
+            if(!promotionEl || !promotionImgEl){
+                console.warn(`No associated promotion found for event ${matchEvent}, skipping`);
+                continue;
+            }
             const promotionUrl = await promotionEl?.evaluate((el) => {
                 const attrs = el.attributes;
                 for(const attr of attrs){
