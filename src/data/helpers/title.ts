@@ -68,6 +68,7 @@ export async function getAllForWrestler(browser: Browser, url: string, wrestlerN
         }
         titles[name].reigns?.push(newReign);
     }
+    await page.close();
     return titles;
 }
 
@@ -142,5 +143,6 @@ async function getDetail(browser: Browser, titleInfo: Partial<Title>): Promise<T
     if(activeTo){
         titleToReturn.activeTo = activeTo;
     }
+    await page.close();
     return titleToReturn as Title;
 }
