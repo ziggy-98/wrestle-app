@@ -10,6 +10,7 @@
     "retrieve-data": "ts-node src/data/getData.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.8.2",
     "config": "^3.3.12",
     "express": "^5.1.0",
     "typescript": "^5.8.3"
