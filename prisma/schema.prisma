@@ -16,6 +16,7 @@ datasource db {
 
 model Wrestler {
   id             BigInt                @id @default(autoincrement())
+  name           String
   birthplace     String
   gender         String
   height         String
