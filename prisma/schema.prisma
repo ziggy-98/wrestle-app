@@ -24,31 +24,27 @@ model Wrestler {
   retired        String
   nicknames      Json
   signatureMoves Json
-  matches        Match_Wrestlers[]
+  events         Event_Wrestler[]
   titles         Wrestler_Titles[]
   promotions     Promotion_Wrestlers[]
 }
 
 model Event {
-  id      BigInt  @id @default(autoincrement())
-  name    String
-  matches Match[]
+  id           BigInt           @id @default(autoincrement())
+  name         String
+  wrestlers    Event_Wrestler[]
+  promotion_id BigInt
+  promotion    Promotion        @relation(fields: [promotion_id], references: [id])
 }
 
-model Match {
-  id        BigInt            @id @default(autoincrement())
-  event_id  BigInt
-  event     Event             @relation(fields: [event_id], references: [id])
-  wrestlers Match_Wrestlers[]
-}
+model Event_Wrestler {
+  event_id         BigInt
+  event            Event    @relation(fields: [event_id], references: [id])
+  wrestler_id      BigInt
+  wrestler         Wrestler @relation(fields: [wrestler_id], references: [id])
+  match_descriptor String
 
-model Match_Wrestlers {
-  match_id    BigInt
-  match       Match    @relation(fields: [match_id], references: [id])
-  wrestler_id BigInt
-  wrestler    Wrestler @relation(fields: [wrestler_id], references: [id])
-
-  @@id([match_id, wrestler_id])
+  @@id([event_id, wrestler_id])
 }
 
 model Title {
@@ -73,6 +69,7 @@ model Promotion {
   name   String                @unique
   titles Title[]
   alumni Promotion_Wrestlers[]
+  events Event[]
 }
 
 model Promotion_Wrestlers {
