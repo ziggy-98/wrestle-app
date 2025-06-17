@@ -33,6 +33,7 @@ model Wrestler {
 model Event {
   id           BigInt           @id @default(autoincrement())
   name         String
+  date         DateTime
   wrestlers    Event_Wrestler[]
   promotion_id BigInt
   promotion    Promotion        @relation(fields: [promotion_id], references: [id])
@@ -78,6 +79,8 @@ model Promotion_Wrestlers {
   promotion    Promotion @relation(fields: [promotion_id], references: [id])
   wrestler_id  BigInt
   wrestler     Wrestler  @relation(fields: [wrestler_id], references: [id])
+  debut        DateTime
+  exit         DateTime?
 
   @@id([wrestler_id, promotion_id])
 }
