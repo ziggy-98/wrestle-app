@@ -67,11 +67,12 @@ model Wrestler_Titles {
 }
 
 model Promotion {
-  id     BigInt                @id @default(autoincrement())
-  name   String                @unique
-  titles Title[]
-  alumni Promotion_Wrestlers[]
-  events Event[]
+  id                       BigInt                @id @default(autoincrement())
+  name                     String                @unique
+  cagematch_correlation_id BigInt                @unique
+  titles                   Title[]
+  alumni                   Promotion_Wrestlers[]
+  events                   Event[]
 }
 
 model Promotion_Wrestlers {
