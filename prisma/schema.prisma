@@ -15,19 +15,20 @@ datasource db {
 }
 
 model Wrestler {
-  id             BigInt                @id @default(autoincrement())
-  name           String
-  birthplace     String
-  gender         String
-  height         String
-  weight         String
-  debut          String
-  retired        String
-  nicknames      Json
-  signatureMoves Json
-  events         Event_Wrestler[]
-  titles         Wrestler_Titles[]
-  promotions     Promotion_Wrestlers[]
+  id                       BigInt                @id @default(autoincrement())
+  name                     String
+  birthplace               String
+  gender                   String
+  height                   String
+  weight                   String
+  debut                    String
+  retired                  String
+  nicknames                Json
+  signatureMoves           Json
+  cagematch_correlation_id BigInt                @unique
+  events                   Event_Wrestler[]
+  titles                   Wrestler_Titles[]
+  promotions               Promotion_Wrestlers[]
 }
 
 model Event {
