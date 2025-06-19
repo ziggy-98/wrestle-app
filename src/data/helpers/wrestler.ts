@@ -57,12 +57,19 @@ export async function getAll(browser: Browser) {
             url = attribute.value;
           }
         }
+        const id = url.match(/nr=([0-9]+)/)?.[1];
+        if (!id) {
+          return;
+        }
         return {
+          id: parseInt(id),
           name,
           url,
         };
       });
-      wrestlers.push(wrestler);
+      if (wrestler) {
+        wrestlers.push(wrestler);
+      }
     }
     await page.close();
     if (allWrestlersFound) {

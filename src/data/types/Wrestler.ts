@@ -1,4 +1,5 @@
 export type Wrestler = {
+  id: number;
   name: string;
   url: string;
   details?: {
