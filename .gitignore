@@ -5,3 +5,4 @@ dist
 src/data/extracts/*.json
 prisma/generated
 .env
+.vscode
