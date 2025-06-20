@@ -1,9 +1,13 @@
 export type Match = {
-    wrestlers: string[],
-    date: Date,
-    promotion: {
-        name: string,
-        url: string
-    },
-    event: string
-}
+  wrestlers: number[];
+  date: Date;
+  promotion: {
+    id: number;
+    name: string;
+    url: string;
+  };
+  event: {
+    id: number;
+    name: string;
+  };
+};

@@ -18,11 +18,7 @@ export async function getAll(browser: Browser) {
   for (let i = 0; i < lastPage; i++) {
     let allWrestlersFound = false;
     const page = await browser.newPage();
-    await page.goto(
-      `${BASE_URL}?id=2&view=workers&s=${
-        100 * i
-      }&sortby=colRating&sorttype=DESC`
-    );
+    await page.goto(`${BASE_URL}?id=2&view=workers&s=${100 * i}&sortby=colRating&sorttype=DESC`);
     const rows = await page.$$(".TableContents .TRow1, .TableContents .TRow2");
     for (const row of rows) {
       const ratingEl = await row.$(".TCol:nth-child(8)");
@@ -30,46 +26,39 @@ export async function getAll(browser: Browser) {
         console.error("Could not find rating column. Exiting");
         return [];
       }
-      const rating = await ratingEl.evaluate((el) => el.textContent.trim());
+      const rating = await ratingEl.evaluate((el) => el.textContent?.trim());
       if (!rating) {
         console.log("All wrestlers with ratings found, exiting");
         allWrestlersFound = true;
         break;
       }
+
       const heightEl = await row.$(".TCol:nth-child(5)");
       if (!heightEl) {
         console.error("Could not find height column, exiting");
         return [];
       }
-      const height = await heightEl.evaluate((el) => el.textContent.trim());
+      const height = await heightEl.evaluate((el) => el.textContent?.trim());
       if (!height) {
         console.info("Gimmick is not a wrestler, skipping");
         continue;
       }
+
       const wrestlerInfoHandles = await row.$$(".TCol");
       const wrestlerInfo = wrestlerInfoHandles[1];
       const wrestler = await wrestlerInfo.evaluate((cell) => {
-        const name = cell.textContent;
-        const cellAttributes = cell.firstElementChild.attributes;
-        let url = "";
-        for (const attribute of cellAttributes) {
-          if (attribute.name === "href") {
-            url = attribute.value;
-          }
-        }
-        const id = url.match(/nr=([0-9]+)/)?.[1];
-        if (!id) {
-          return;
-        }
+        const url = cell.firstElementChild?.attributes.getNamedItem("href")?.value;
+        const id = parseInt(url?.match(/nr=([0-9]+)/)?.[1] ?? "");
         return {
-          id: parseInt(id),
-          name,
+          id,
           url,
+          name: cell.textContent,
         };
       });
-      if (wrestler) {
-        wrestlers.push(wrestler);
+      if (!Object.values(wrestler).every((value) => value)) {
+        continue;
       }
+      wrestlers.push(wrestler as Wrestler);
     }
     await page.close();
     if (allWrestlersFound) {
@@ -79,11 +68,7 @@ export async function getAll(browser: Browser) {
   return wrestlers;
 }
 
-export async function getDetail(
-  browser: Browser,
-  url: string,
-  name: string
-): Promise<Wrestler["details"]> {
+export async function getDetail(browser: Browser, url: string, name: string): Promise<Wrestler["details"]> {
   const page = await browser.newPage();
   await page.goto(url);
 
@@ -144,8 +129,7 @@ export async function getDetail(
   const data = await Promise.allSettled(elPromises);
   const dataKeys = Object.keys(detail);
   for (let i = 0; i < elPromises.length; i++) {
-    const elHandle = (data[i] as PromiseFulfilledResult<ElementHandle | null>)
-      .value;
+    const elHandle = (data[i] as PromiseFulfilledResult<ElementHandle | null>).value;
     if (!elHandle) {
       if (dataKeys[i] === "careerEnd") {
         console.info(`${name} may be an active wrestler`);
@@ -165,7 +149,7 @@ export async function getDetail(
     if (fieldsWithDates.includes(dataKeys[i])) {
       //@ts-ignore
       detail[dataKeys[i]] = await elHandle.evaluate((el) => {
-        return new Date(el.textContent);
+        return new Date(el.textContent as string);
       });
       continue;
     }
@@ -178,11 +162,7 @@ export async function getDetail(
   return detail;
 }
 
-export async function getCareer(
-  browser: Browser,
-  url: string,
-  name: string
-): Promise<Wrestler["career"]> {
+export async function getCareer(browser: Browser, url: string, name: string): Promise<Wrestler["career"]> {
   const page = await browser.newPage();
   await page.goto(url);
 
@@ -201,31 +181,23 @@ export async function getCareer(
     const yearEl = await row.$("td:nth-child(1)");
     const promotionsEl = await row.$("td:nth-child(2)");
 
-    const year = await yearEl?.evaluate((el) => parseInt(el.textContent));
+    const year = await yearEl?.evaluate((el) => parseInt(el.textContent as string));
     if (!year) {
       continue;
     }
-    const promotions = await promotionsEl?.evaluate((el) => {
-      const returnArray: number[] = [];
-      const promotionLinks = el.children;
 
-      // @ts-ignore
-      for (const link of promotionLinks) {
-        let url: string | undefined;
-        const attrs = link.attributes;
-        for (const attr of attrs) {
-          if (attr.name === "href") {
-            url = attr.value;
-          }
-        }
-        if (url) {
-          const promotionId = url.match(/promotion=([0-9]+)/)?.[1];
+    const promotions = await promotionsEl?.evaluate((el) => {
+      const links = [].slice.call(el.children) as HTMLElement[];
+      return links
+        .map((link) => {
+          const url = link.attributes.getNamedItem("href")?.value;
+          const promotionId = url?.match(/promotion=([0-9]+)/)?.[1];
           if (promotionId) {
-            returnArray.push(parseInt(promotionId));
+            return parseInt(promotionId);
           }
-        }
-      }
-      return returnArray;
+          return;
+        })
+        .filter((promotionId) => promotionId !== undefined);
     });
     career[year] = promotions ?? [];
   }

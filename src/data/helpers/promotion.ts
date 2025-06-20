@@ -9,35 +9,21 @@ export async function getAllForMatchesAndMerge(
 ): Promise<Promotion[]> {
   const promotionsToReturn = promotions.slice(0);
   for (const match of matches) {
-    const matchPromotionId = match.promotion.url.match(/nr=([0-9]+)/)?.[1];
-    if (!matchPromotionId) {
-      continue;
-    }
-    const existingPromotion = promotionsToReturn.find(
-      (promotion) => promotion.id === parseInt(matchPromotionId)
-    );
+    const existingPromotion = promotionsToReturn.find((promotion) => promotion.id === match.promotion.id);
     if (existingPromotion) {
       continue;
     }
     console.info(`Retrieving data for promotion ${match.promotion.name}`);
-    const newPromotion = await getPromotionDetail(
-      browser,
-      match.promotion.url,
-      match.promotion.name
-    );
+    const newPromotion = await getPromotionDetail(browser, match.promotion);
     promotionsToReturn.push(newPromotion);
   }
   return promotionsToReturn;
 }
 
-async function getPromotionDetail(
-  browser: Browser,
-  url: string,
-  name: string
-): Promise<Promotion> {
-  const matchPromotionId = url.match(/nr=([0-9]+)/)?.[1] ?? "unknown";
+async function getPromotionDetail(browser: Browser, promotion: Match["promotion"]): Promise<Promotion> {
+  const { name, url, id } = promotion;
   let promotionToReturn: Partial<Promotion> = {
-    id: parseInt(matchPromotionId),
+    id,
     name,
   };
   const BASE_URL = config.get<string>("data.baseUrl");
@@ -59,31 +45,25 @@ async function getPromotionDetail(
     active: els[2],
   };
   for (const [elName, promiseResult] of Object.entries(elsMap)) {
-    const value = (
-      promiseResult as PromiseFulfilledResult<ElementHandle | null>
-    ).value;
+    const value = (promiseResult as PromiseFulfilledResult<ElementHandle | null>).value;
     if (!value) {
       console.warn(`Could not find any element for ${elName} on ${name}`);
       continue;
     }
     if (elName === "status") {
-      promotionToReturn.isActive = await value.evaluate(
-        (evalEl) => evalEl.textContent === "Active"
-      );
+      promotionToReturn.isActive = await value.evaluate((evalEl) => evalEl.textContent === "Active");
       continue;
     }
     if (elName === "location") {
-      promotionToReturn.location = await value.evaluate(
-        (evalEl) => evalEl.textContent
-      );
+      promotionToReturn.location = await value.evaluate((evalEl) => evalEl.textContent ?? undefined);
       continue;
     }
     if (elName === "active") {
       const { started, finished } = await value.evaluate((evalEl) => {
-        const [started, finished] = evalEl.textContent.split(" - ");
+        const [started, finished] = evalEl.textContent?.split(" - ") ?? [];
         return {
-          started,
-          finished: finished === "today" ? undefined : finished,
+          started: new Date(started),
+          finished: finished === "today" ? undefined : new Date(finished),
         };
       });
       promotionToReturn = {

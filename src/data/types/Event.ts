@@ -1,5 +1,6 @@
 export type Event = {
-    name: string,
-    date: Date,
-    promotionId: number
-}
+  id: number;
+  name: string;
+  date: Date;
+  promotion_id: number;
+};

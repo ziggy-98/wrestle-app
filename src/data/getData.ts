@@ -19,24 +19,12 @@ export async function getData() {
   for (const wrestler of wrestlers) {
     const wrestlerUrl = `${BASE_URL}${wrestler.url}`;
     console.info(`Getting data for wrestler ${wrestler.name}`);
-    const wrestlerInfo = await helpers.wrestler.getDetail(
-      browser,
-      wrestlerUrl,
-      wrestler.name
-    );
-    if (
-      !wrestlerInfo?.roles?.find(
-        (role) => role.toLowerCase().indexOf("wrestler") > -1
-      )
-    ) {
+    const wrestlerInfo = await helpers.wrestler.getDetail(browser, wrestlerUrl, wrestler.name);
+    if (!wrestlerInfo?.roles?.find((role) => role.toLowerCase().indexOf("wrestler") > -1)) {
       continue;
     }
     const careerUrl = wrestlerUrl + "&page=20";
-    const wrestlerCareer = await helpers.wrestler.getCareer(
-      browser,
-      careerUrl,
-      wrestler.name
-    );
+    const wrestlerCareer = await helpers.wrestler.getCareer(browser, careerUrl, wrestler.name);
     wrestlersWithDetails.push({
       ...wrestler,
       ...wrestlerInfo,
@@ -44,25 +32,13 @@ export async function getData() {
     });
     const matchUrl = wrestlerUrl + "&page=4";
     console.info(`Getting matches for wrestler ${wrestler.name}`);
-    const newWrestlerMatches = await helpers.match.getAllForWrestler(
-      browser,
-      matchUrl,
-      allWrestlingMatches
-    );
+    const newWrestlerMatches = await helpers.match.getAllForWrestler(browser, matchUrl, allWrestlingMatches);
     allWrestlingMatches = allWrestlingMatches.concat(newWrestlerMatches);
     console.info(`Getting all promotions for wrestler ${wrestler.name}`);
-    allPromotions = await helpers.promotion.getAllForMatchesAndMerge(
-      browser,
-      newWrestlerMatches,
-      allPromotions
-    );
+    allPromotions = await helpers.promotion.getAllForMatchesAndMerge(browser, newWrestlerMatches, allPromotions);
     const titleUrl = wrestlerUrl + "&page=11";
     console.info(`Getting all titles for wrestler ${wrestler.name}`);
-    const newTitleReigns = await helpers.title.getAllForWrestler(
-      browser,
-      titleUrl,
-      wrestler.name
-    );
+    const newTitleReigns = await helpers.title.getAllForWrestler(browser, titleUrl, wrestler.name, wrestler.id);
     allTitles = await helpers.title.merge(browser, allTitles, newTitleReigns);
     console.info(`All data retrieved for wrestler ${wrestler.name}`);
   }
@@ -83,10 +59,7 @@ export async function getData() {
     console.log("Final titles count: ", titles.length);
     console.log("Final promotions count: ", promotions.length);
     const filename = `wrestler-data-${new Date().toISOString()}.json`;
-    fs.writeFileSync(
-      path.resolve(__dirname, "extracts", filename),
-      JSON.stringify(data)
-    );
+    fs.writeFileSync(path.resolve(__dirname, "extracts", filename), JSON.stringify(data));
     console.log("All data extracted successfully");
     process.exit(0);
   });
