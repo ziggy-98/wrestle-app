@@ -41,11 +41,10 @@ model Event {
 }
 
 model Event_Wrestler {
-  event_id         BigInt
-  event            Event    @relation(fields: [event_id], references: [id])
-  wrestler_id      BigInt
-  wrestler         Wrestler @relation(fields: [wrestler_id], references: [id])
-  match_descriptor String
+  event_id    BigInt
+  event       Event    @relation(fields: [event_id], references: [id])
+  wrestler_id BigInt
+  wrestler    Wrestler @relation(fields: [wrestler_id], references: [id])
 
   @@id([event_id, wrestler_id])
 }
@@ -60,9 +59,11 @@ model Title {
 
 model Wrestler_Titles {
   wrestler_id BigInt
-  wrestler    Wrestler @relation(fields: [wrestler_id], references: [id])
+  wrestler    Wrestler  @relation(fields: [wrestler_id], references: [id])
   title_id    BigInt
-  title       Title    @relation(fields: [title_id], references: [id])
+  title       Title     @relation(fields: [title_id], references: [id])
+  heldFrom    DateTime
+  heldTo      DateTime?
 
   @@id([wrestler_id, title_id])
 }
