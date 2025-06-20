@@ -32,12 +32,13 @@ model Wrestler {
 }
 
 model Event {
-  id           BigInt           @id @default(autoincrement())
-  name         String
-  date         DateTime
-  wrestlers    Event_Wrestler[]
-  promotion_id BigInt
-  promotion    Promotion        @relation(fields: [promotion_id], references: [id])
+  id                       BigInt           @id @default(autoincrement())
+  name                     String
+  date                     DateTime
+  wrestlers                Event_Wrestler[]
+  cagematch_correlation_id BigInt           @unique
+  promotion_id             BigInt
+  promotion                Promotion        @relation(fields: [promotion_id], references: [id])
 }
 
 model Event_Wrestler {
@@ -50,11 +51,12 @@ model Event_Wrestler {
 }
 
 model Title {
-  id           BigInt            @id @default(autoincrement())
-  name         String            @unique
-  promotion_id BigInt
-  promotion    Promotion         @relation(fields: [promotion_id], references: [id])
-  lineage      Wrestler_Titles[]
+  id                       BigInt            @id @default(autoincrement())
+  name                     String            @unique
+  cagematch_correlation_id BigInt            @unique
+  promotion_id             BigInt
+  promotion                Promotion         @relation(fields: [promotion_id], references: [id])
+  lineage                  Wrestler_Titles[]
 }
 
 model Wrestler_Titles {
