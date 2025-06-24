@@ -70,6 +70,10 @@ export async function getAllForWrestler(
       return dateToReturn;
     });
 
+    if (!heldFrom) {
+      continue;
+    }
+
     if (!titles[name]) {
       const titleId = url.match(/nr=([0-9]+)/)?.[1];
       if (!titleId) {
