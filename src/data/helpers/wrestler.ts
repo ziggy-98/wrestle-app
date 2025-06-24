@@ -167,7 +167,7 @@ export async function getCareer(browser: Browser, url: string, name: string): Pr
   await page.goto(url);
 
   const careerTableRowEls = await page.$$(
-    ".Caption:first-child .Table table tbody .TRow1, .Caption:first-child + .Table table tbody .TRow2"
+    ".Caption:first-child + .Table table tbody .TRow1, .Caption:first-child + .Table table tbody .TRow2"
   );
 
   if (!careerTableRowEls) {
