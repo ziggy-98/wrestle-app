@@ -80,12 +80,11 @@ model Promotion {
 }
 
 model Promotion_Wrestlers {
+  id           BigInt    @id @default(autoincrement())
   promotion_id BigInt
   promotion    Promotion @relation(fields: [promotion_id], references: [id])
   wrestler_id  BigInt
   wrestler     Wrestler  @relation(fields: [wrestler_id], references: [id])
-  debut        DateTime
-  exit         DateTime?
-
-  @@id([wrestler_id, promotion_id])
+  debut        Int       @db.SmallInt
+  exit         Int?      @db.SmallInt
 }
