@@ -21,10 +21,10 @@ model Wrestler {
   gender                   String
   height                   String
   weight                   String
-  debut                    String
+  debut                    String?
   retired                  String
   nicknames                Json
-  signatureMoves           Json
+  signature_moves          Json
   cagematch_correlation_id BigInt                @unique
   events                   Event_Wrestler[]
   titles                   Wrestler_Titles[]
