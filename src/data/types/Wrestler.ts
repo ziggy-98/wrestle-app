@@ -7,8 +7,8 @@ export type Wrestler = {
     gender: string;
     height: string;
     weight: string;
-    careerStart: Date;
-    careerEnd?: Date;
+    careerStart: string;
+    careerEnd?: string;
     roles?: string[];
     nicknames?: string[];
     signatureMoves?: string[];

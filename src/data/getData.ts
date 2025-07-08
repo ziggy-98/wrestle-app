@@ -27,7 +27,7 @@ export async function getData() {
     const wrestlerCareer = await helpers.wrestler.getCareer(browser, careerUrl, wrestler.name);
     wrestlersWithDetails.push({
       ...wrestler,
-      ...wrestlerInfo,
+      details: wrestlerInfo,
       career: wrestlerCareer,
     });
     const matchUrl = wrestlerUrl + "&page=4";

@@ -61,11 +61,17 @@ async function getPromotionDetail(browser: Browser, promotion: Match["promotion"
     if (elName === "active") {
       const { started, finished } = await value.evaluate((evalEl) => {
         const [started, finished] = evalEl.textContent?.split(" - ") ?? [];
+        const startedDate = new Date(started);
+        const finishedDate = new Date(finished);
         return {
-          started: new Date(started),
-          finished: finished === "today" ? undefined : new Date(finished),
+          started: !isNaN(startedDate.getTime()) ? startedDate.toISOString() : undefined,
+          finished: !isNaN(finishedDate.getTime()) ? finishedDate.toISOString() : undefined,
         };
       });
+      if (!started) {
+        console.warn(`Could not find a start date for promotion ${name}, skipping`);
+        continue;
+      }
       promotionToReturn = {
         ...promotionToReturn,
         started,

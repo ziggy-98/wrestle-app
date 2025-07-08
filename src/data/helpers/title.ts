@@ -67,7 +67,7 @@ export async function getAllForWrestler(
       if (isNaN(dateToReturn.getTime())) {
         return;
       }
-      return dateToReturn;
+      return dateToReturn.toISOString();
     });
 
     if (!heldFrom) {
@@ -141,8 +141,8 @@ async function getDetail(browser: Browser, titleInfo: Partial<Title>): Promise<T
   }
   const { promotion, activeFrom, activeTo } = await allPromotionsEl.evaluate((el) => {
     const text = el.textContent;
-    const promotionEl = el.firstElementChild;
-    const promotion = promotionEl?.textContent?.trim() ?? text?.split("(")[0].trim();
+    const promotionUrl = el.firstElementChild?.attributes.getNamedItem("href")?.value;
+    const promotion = promotionUrl?.match(/nr=([0-9]+)/)?.[1];
     const allDates = text?.matchAll(/\([a-zA-Z0-9\- .]+\)/g);
     let activeFrom = "";
     let activeTo = "";
@@ -161,6 +161,10 @@ async function getDetail(browser: Browser, titleInfo: Partial<Title>): Promise<T
       activeTo: activeTo !== "today" ? activeTo : undefined,
     };
   });
+  if (!promotion) {
+    console.warn(`Could not find promotion for title ${name}, skipping`);
+    return;
+  }
   const isActive = activeTo === undefined;
   const titleToReturn: Partial<Title> = {
     id,

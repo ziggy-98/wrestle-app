@@ -1,6 +1,6 @@
 export type Match = {
   wrestlers: number[];
-  date: Date;
+  date: string;
   promotion: {
     id: number;
     name: string;

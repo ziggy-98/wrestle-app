@@ -91,7 +91,7 @@ export async function getAllForWrestler(browser: Browser, url: string, allMatche
           name: promotionName,
           url: promotionUrl,
         },
-        date: matchDate ?? new Date(),
+        date: matchDate ? matchDate.toISOString() : new Date().toISOString(),
         event: matchEvent,
       };
 

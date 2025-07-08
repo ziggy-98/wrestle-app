@@ -8,7 +8,7 @@ export type Title = {
   activeTo?: string;
   reigns: {
     champion: number;
-    heldFrom: Date;
-    heldTo?: Date;
+    heldFrom: string;
+    heldTo?: string;
   }[];
 };
