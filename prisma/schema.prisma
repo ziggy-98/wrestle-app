@@ -52,7 +52,7 @@ model Event_Wrestler {
 
 model Title {
   id                       BigInt            @id @default(autoincrement())
-  name                     String            @unique
+  name                     String
   cagematch_correlation_id BigInt            @unique
   promotion_id             BigInt
   promotion                Promotion         @relation(fields: [promotion_id], references: [id])
