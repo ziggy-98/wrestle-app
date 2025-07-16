@@ -311,7 +311,7 @@ export function buildWrestlerPromotionData(
 }
 
 function getData() {
-  const files = fs.readdirSync(path.join(__dirname, "src", "data", "extracts"));
+  const files = fs.readdirSync(path.join(__dirname, "..", "src", "data", "extracts"));
   files.sort((fileA, fileB) => {
     const fileADate = fileA.replace("wrestler-data-", "").replace(".json", "");
     const fileBDate = fileB.replace("wrestler-data-", "").replace(".json", "");
@@ -321,10 +321,10 @@ function getData() {
   if (!latestFile) {
     throw new Error("Could not seed db: data extract could not be found");
   }
-  return JSON.parse(fs.readFileSync(path.join(__dirname, "src", "data", "extracts", latestFile)).toString());
+  return JSON.parse(fs.readFileSync(path.join(__dirname, "..", "src", "data", "extracts", latestFile)).toString());
 }
 
-export async function main() {
+async function main() {
   await client.$connect();
   const data = getData();
 
@@ -333,9 +333,8 @@ export async function main() {
   });
 
   if (error) {
-    console.error(`Could not seed database. There was an error with the data file`);
-    console.error(error);
-    process.exit(1);
+    console.error(`There was an error with the data file`);
+    throw error;
   }
 
   const wrestlerData: Wrestler[] = value.wrestlers;
@@ -368,3 +367,14 @@ export async function main() {
     data: promotionWrestlerData,
   });
 }
+
+main()
+  .then(async () => {
+    await client.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(`Could not seed database.`);
+    console.error(e);
+    await client.$disconnect();
+    process.exit(1);
+  });
