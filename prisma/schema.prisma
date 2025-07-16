@@ -60,14 +60,13 @@ model Title {
 }
 
 model Wrestler_Titles {
+  id          BigInt    @id @default(autoincrement())
   wrestler_id BigInt
   wrestler    Wrestler  @relation(fields: [wrestler_id], references: [id])
   title_id    BigInt
   title       Title     @relation(fields: [title_id], references: [id])
   held_from   DateTime
   held_to     DateTime?
-
-  @@id([wrestler_id, title_id])
 }
 
 model Promotion {
