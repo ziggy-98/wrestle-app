@@ -73,10 +73,10 @@ export async function getDetail(browser: Browser, url: string, name: string): Pr
   await page.goto(url);
 
   let detail: Wrestler["details"] = {
-    birthplace: "",
+    birthplace: "Unknown",
     gender: "",
-    height: "",
-    weight: "",
+    height: "Unknown",
+    weight: "Unknown",
     careerStart: new Date().toISOString(),
     careerEnd: new Date().toISOString(),
     roles: [],

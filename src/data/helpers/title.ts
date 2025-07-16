@@ -73,14 +73,15 @@ export async function getAllForWrestler(
     if (!heldFrom) {
       continue;
     }
+    const titleId = url.match(/nr=([0-9]+)/)?.[1];
 
-    if (!titles[name]) {
-      const titleId = url.match(/nr=([0-9]+)/)?.[1];
-      if (!titleId) {
-        console.warn(`No id found for title ${name}, skipping`);
-        continue;
-      }
-      titles[name] = {
+    if (!titleId) {
+      console.warn(`No id found for title ${name}, skipping`);
+      continue;
+    }
+
+    if (!titles[titleId]) {
+      titles[titleId] = {
         id: parseInt(titleId),
         name,
         url: `${BASE_URL}${url}`,
@@ -93,7 +94,7 @@ export async function getAllForWrestler(
       heldFrom,
       heldTo,
     };
-    titles[name].reigns?.push(newReign);
+    titles[titleId].reigns?.push(newReign);
   }
   await page.close();
   return titles;
@@ -105,11 +106,8 @@ export async function merge(
   newReigns: WrestlerTitlesReturnType
 ): Promise<Title[]> {
   let titlesToReturn = allTitles.slice(0);
-  for (const [currentTitleName, currentTitleInfo] of Object.entries(newReigns)) {
-    let existingTitleIndex = titlesToReturn.findIndex((title) => title.name === currentTitleName);
-    if (existingTitleIndex > -1) {
-      continue;
-    }
+  for (const [currentTitleId, currentTitleInfo] of Object.entries(newReigns)) {
+    let existingTitleIndex = titlesToReturn.findIndex((title) => title.id === parseInt(currentTitleId));
     if (existingTitleIndex === -1) {
       const enrichedTitle = await getDetail(browser, currentTitleInfo);
       if (!enrichedTitle) {
