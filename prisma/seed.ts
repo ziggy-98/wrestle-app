@@ -21,6 +21,7 @@ import {
   WrestlerMap,
 } from "./utils/types";
 import { parseModel } from "./utils/parseModel";
+import { inputSchema } from "./utils/inputSchema";
 
 export function buildWrestlerData(wrestlers: Wrestler[]): Prisma.WrestlerCreateManyInput[] {
   return wrestlers
@@ -225,8 +226,6 @@ export function getCareerStints(wrestlerId: number, career: Record<number, numbe
     return acc;
   }, {});
 
-  console.info("Map so far: ", allPromotionYearsMap);
-
   return Object.entries(allPromotionYearsMap).map(([promotionId, allYearsInPromotion]) => {
     let stoppingPoints: number[] = [];
     for (const year of allYearsInPromotion) {
@@ -250,9 +249,6 @@ export function getCareerStints(wrestlerId: number, career: Record<number, numbe
         stoppingPoints.push(year);
       }
     }
-
-    console.info("Promotion id: ", promotionId);
-    console.info("Stopping points: ", stoppingPoints);
 
     const stints = _.chunk(stoppingPoints, 2).map(([start, end]) => ({
       start,
@@ -332,15 +328,25 @@ export async function main() {
   await client.$connect();
   const data = getData();
 
-  const wrestlerData: Wrestler[] = data.wrestlers;
+  const { value, error } = inputSchema.validate(data, {
+    stripUnknown: true,
+  });
+
+  if (error) {
+    console.error(`Could not seed database. There was an error with the data file`);
+    console.error(error);
+    process.exit(1);
+  }
+
+  const wrestlerData: Wrestler[] = value.wrestlers;
   const wrestlersToAdd = buildWrestlerData(wrestlerData);
   const wrestlers = await addWrestlers(wrestlersToAdd);
 
-  const promotionData: Promotion[] = data.promotions;
+  const promotionData: Promotion[] = value.promotions;
   const promotionsToAdd = buildPromotionData(promotionData);
   const promotions = await addPromotions(promotionsToAdd);
 
-  const titleData: Title[] = data.titles;
+  const titleData: Title[] = value.titles;
   const titlesToAdd = buildTitleData(promotions, titleData);
   const titles = await addTitles(titlesToAdd);
   const titleReigns = buildTitleReignData(wrestlers, titles, titleData);
@@ -348,7 +354,7 @@ export async function main() {
     data: titleReigns,
   });
 
-  const matchData: Match[] = data.matches;
+  const matchData: Match[] = value.matches;
   const [eventData, eventWrestlerData] = buildEventData(matchData, promotions);
   const events = await addEvents(eventData);
 
