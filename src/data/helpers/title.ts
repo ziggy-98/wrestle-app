@@ -156,7 +156,7 @@ async function getDetail(browser: Browser, titleInfo: Partial<Title>): Promise<T
       }
     }
     return {
-      promotion,
+      promotion: parseInt(promotion as string),
       activeFrom,
       activeTo: activeTo !== "today" ? activeTo : undefined,
     };

@@ -2,7 +2,7 @@ export type Title = {
   id: number;
   name: string;
   url: string;
-  promotion: string;
+  promotion: number;
   isActive?: boolean;
   activeFrom?: string;
   activeTo?: string;
