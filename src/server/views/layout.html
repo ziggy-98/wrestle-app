@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head> </head>
+  <body>
+    {% block header %}
+    <header class="header">
+      <div class="logo-container">
+        <span class="logo-text">Wrestle rumble</span>
+      </div>
+      <nav class="header-nav">
+        <ul class="nav-list">
+          <li class="nav-list-item">
+            <a class="nav-list-item-link" href="/home">Battle</a>
+          </li>
+          <li class="link">
+            <a class="nav-lis-item-link" href="/how-to-play">How to play</a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+    {% endblock %}
+    <main id="root"></main>
+    {% block footer %}
+    <footer class="footer">
+      <div class="upper-footer"></div>
+      <nav class="footer-nav"></nav>
+      <div class="copyright-container">
+        <span class="copyright-text">© Luke Zigler 2025</span>
+      </div>
+    </footer>
+    {% endblock %}
+  </body>
+</html>
